@@ -1,0 +1,8 @@
+[build]
+  publish = "build"
+  command = "npm run build"
+
+[dev]
+  command = "npm start"
+
+# You can add more settings here as needed, such as redirects or environment variables.

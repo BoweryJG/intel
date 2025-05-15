@@ -193,7 +193,7 @@ const CategoryNewsModal = ({
                   />
                 </ListItem>
                 {index < articles.length - 1 && (
-                  <Divider component="li" />
+                  <Divider />
                 )}
               </React.Fragment>
             ))}

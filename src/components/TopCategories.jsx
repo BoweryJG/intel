@@ -69,7 +69,7 @@ const TopCategories = ({ categories, title = "Top Categories" }) => {
           {categories.map((category, index) => (
             <React.Fragment key={category.id || index}>
               <ListItem
-                component={motion.li}
+                component={motion.div}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -146,7 +146,7 @@ const TopCategories = ({ categories, title = "Top Categories" }) => {
                 />
               </ListItem>
               {index < categories.length - 1 && (
-                <Divider component="li" />
+                <Divider />
               )}
             </React.Fragment>
           ))}

@@ -65,7 +65,7 @@ const NewsArticles = ({
         {articles.map((article, index) => (
           <React.Fragment key={article.article_id || index}>
             <ListItem
-              component={motion.li}
+              component={motion.div}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
@@ -117,7 +117,7 @@ const NewsArticles = ({
                           />
                         )}
                       </Box>
-                      <Typography 
+                      <Typography component="div" 
                         variant="body2" 
                         color="text.secondary"
                         sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
@@ -156,7 +156,7 @@ const NewsArticles = ({
               
               {article.summary && (
                 <Box sx={{ mt: 1, width: '100%' }}>
-                  <Typography 
+                  <Typography component="div" 
                     variant="body2" 
                     color="text.secondary"
                     sx={{
@@ -180,7 +180,7 @@ const NewsArticles = ({
               )}
             </ListItem>
             {index < articles.length - 1 && (
-              <Divider component="li" />
+              <Divider />
             )}
           </React.Fragment>
         ))}

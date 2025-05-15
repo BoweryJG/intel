@@ -48,11 +48,26 @@ export const dentalTheme = createTheme({
         },
       },
     },
+    MuiTypography: {
+      defaultProps: {
+        component: 'div',
+      },
+    },
     MuiTab: {
       styleOverrides: {
         root: {
           textTransform: 'none',
         },
+      },
+    },
+    MuiList: {
+      defaultProps: {
+        component: 'div',
+      },
+    },
+    MuiListItem: {
+      defaultProps: {
+        component: 'div',
       },
     },
   },

@@ -67,7 +67,7 @@ const TopProcedures = ({ procedures, title = "Top Procedures" }) => {
           {procedures.map((procedure, index) => (
             <React.Fragment key={procedure.id || index}>
               <ListItem
-                component={motion.li}
+                component={motion.div}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -128,7 +128,7 @@ const TopProcedures = ({ procedures, title = "Top Procedures" }) => {
                 </ListItemSecondaryAction>
               </ListItem>
               {index < procedures.length - 1 && (
-                <Divider component="li" />
+                <Divider />
               )}
             </React.Fragment>
           ))}
