@@ -1,73 +1,87 @@
-# Intel Dashboard Project
+# Intel Dashboard
 
-## Overview
-The Intel Dashboard will provide comprehensive analytics and insights for aesthetic and dental industries, leveraging data from news articles, procedures, market trends, and provider information. The dashboard will visualize key metrics and recommendations to support strategic decision-making.
+A modern, responsive dashboard for visualizing dental and aesthetic procedure intelligence data from Supabase.
 
-## Data Structure
-The dashboard will use optimized Supabase views that provide clean, consistent data with proper null handling and descriptive column names:
+## Features
 
-1. **Industry Metrics** - Overview of industry performance metrics
-   - Key metrics: total articles, unique procedures, unique categories, trending topics, market trends
-   - Performance indicators: avg topic relevance, avg trend impact, avg expected growth
+- **Dual Theme Support**: Toggle between dental and aesthetic industry views with custom themes
+- **Real-time Data**: Connects to Supabase for up-to-date industry intelligence
+- **Interactive Charts**: Visualize market trends and growth rates
+- **Responsive Design**: Works on desktop and mobile devices
+- **Animated UI**: Smooth transitions and animations for better user experience
 
-2. **Procedures** - Detailed procedure analytics and related data
-   - Key data: procedure name, company name, article mentions, categories count, related trends count
-   - Performance metrics: avg trend impact, avg expected growth
-   - Related data: related trends, related categories
+## Tech Stack
 
-3. **Market Trends** - Analysis of emerging market trends with impact scores
-   - Key data: trend name, trend description, impact score, expected growth rate, adoption timeline
-   - Related data: related procedures count, related procedures
+- React 18
+- Material UI 5
+- Supabase (Backend)
+- Recharts (Data visualization)
+- Framer Motion (Animations)
 
-4. **Categories** - Performance metrics for procedure categories
-   - Key data: category name, article count, procedure count, trending topics count, market trends count
-   - Related data: related procedures
+## Project Structure
 
-5. **Trending Topics** - News article topic analysis
-   - Key data: topic, keywords, relevance score, source articles count, article mentions
-   - Related data: related procedures count, related procedures
+```
+src/
+├── components/         # UI components
+│   ├── Dashboard.jsx   # Main dashboard layout
+│   ├── Header.jsx      # App header with theme toggle
+│   ├── MetricsCard.jsx # Individual metric display
+│   ├── TopCategories.jsx # Categories list component
+│   ├── TopProcedures.jsx # Procedures list component
+│   └── TrendChart.jsx  # Chart component
+├── contexts/           # React contexts
+│   ├── DataContext.jsx # Data fetching and state management
+│   └── ThemeContext.jsx # Theme switching functionality
+├── services/           # External service connections
+│   └── supabaseClient.js # Supabase connection and queries
+├── theme/              # Theme definitions
+│   ├── aestheticTheme.js # Aesthetic industry theme
+│   └── dentalTheme.js  # Dental industry theme
+├── App.jsx             # Main application component
+└── index.js            # Application entry point
+```
 
-6. **Recommendations** - Suggested new categories and procedures based on trends
-   - Key data: recommendation type, name, impact score, expected growth rate, adoption timeline, description
+## Setup Instructions
 
-7. **Regional Insights** - Geographic market data and growth rates
-   - Key data: region, country, avg growth rate, total market size, procedure count, latest year
+1. Clone the repository
+   ```
+   git clone <repository-url>
+   cd intel-dashboard
+   ```
 
-8. **Providers** - Provider information and related market trends
-   - Key data: provider name, address, average rating, website, market, primary procedures
-   - Related data: related market trends count, related market trends
+2. Install dependencies
+   ```
+   npm install
+   ```
 
-## Dashboard Features
-- Industry filter to toggle between aesthetic and dental data
-- Key performance metrics cards
-- Interactive charts and visualizations
-- Recommendation panels for new business opportunities
-- Provider mapping and analytics
-- Trend impact analysis with growth projections
+3. Create a `.env` file in the root directory with your Supabase credentials
+   ```
+   REACT_APP_SUPABASE_KEY=your-anon-key
+   ```
 
-## Technical Implementation
-- React-based frontend with responsive design
-- Supabase for backend data storage and querying
-- Data visualization libraries (Chart.js, D3.js, or similar)
-- Authentication and user management
+4. Start the development server
+   ```
+   npm start
+   ```
 
-## Dashboard Layout
-1. **Top Section**: Industry metrics cards (v_dashboard_industry_metrics)
-2. **Middle Section**: Tabs for Procedures, Categories, Market Trends, and Recommendations
-3. **Bottom Section**: Provider information and Regional insights
+5. Open [http://localhost:3000](http://localhost:3000) to view the dashboard in your browser
 
-## Component Structure
-- IndustryMetricsPanel (overview cards)
-- ProceduresTable (sortable/filterable)
-- CategoriesTable (sortable/filterable)
-- MarketTrendsPanel (with impact score visualization)
-- RecommendationsPanel (split by category/procedure)
-- ProvidersMap (geographic visualization)
-- RegionalInsightsChart (market size/growth visualization)
+## Database Schema
 
-## Data Visualization
-- Bar charts for comparing metrics across categories/procedures
-- Line charts for growth rates and trends
-- Heat maps for regional insights
-- Star ratings for provider ratings
-- Impact score visualizations using color gradients
+The dashboard expects the following views in your Supabase database:
+
+- `v_dashboard_industry_metrics` - Overall metrics for each industry
+- `v_dashboard_procedures` - Top procedures with article mentions and growth rates
+- `v_dashboard_categories` - Categories with article counts
+- `v_dashboard_market_trends` - Market trends with impact scores and growth rates
+- `v_dashboard_providers` - Provider information with ratings
+
+## Customization
+
+- Edit theme files in `src/theme/` to customize colors and styling
+- Modify components in `src/components/` to change layout and functionality
+- Update Supabase queries in `src/services/supabaseClient.js` to fetch different data
+
+## License
+
+MIT
