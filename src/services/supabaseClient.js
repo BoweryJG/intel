@@ -1,9 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Hardcode credentials directly to bypass environment variable issues
 const supabaseUrl = 'https://cbopynuvhcymbumjnvay.supabase.co';
-const supabaseKey = process.env.REACT_APP_SUPABASE_KEY || 'your-anon-key';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNib3B5bnV2aGN5bWJ1bWpudmF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM5OTUxNzMsImV4cCI6MjA1OTU3MTE3M30.UZElMkoHugIt984RtYWyfrRuv2rB67opQdCrFVPCfzU';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Immediate connection test
+supabase.from('aesthetic_procedures')
+  .select('count')
+  .then(({ data, error }) => {
+    if (error) {
+      console.error('Supabase connection failed:', error);
+    } else {
+      console.log('Supabase connection SUCCESSFUL:', data);
+    }
+  });
 
 // Fetch news articles related to procedures for a specific industry
 export const fetchNewsArticlesByProcedures = async (industry, limit = 10) => {
@@ -91,41 +103,45 @@ export const fetchNewsArticlesByCategory = async (industry, categoryId, limit = 
   }
 };
 
-// Fetch dashboard data including metrics, procedures, categories, and trends
+// Fetch dashboard data using the correct tables that actually exist
 export const fetchDashboardData = async (industry) => {
   try {
-    // Fetch top procedures
-    const { data: procedures, error: proceduresError } = await supabase
-      .from('repspheresinteldashboardstartingpoint') // Lowercase view name
-      .select('procedure_id, industry, procedure_name') // Simplified select
-      .limit(5);
-      
-    if (proceduresError) {
-      console.error("Error fetching procedures from RepSpheresIntelDashboardStartingPoint:", proceduresError);
-      // Return a structure that won't break the consuming components too much
-      return {
-        metrics: null,
-        procedures: [],
-        categories: [],
-        marketTrends: [],
-        providers: [],
-        trendData: []
-      };
+    console.log(`Fetching dashboard data for industry: ${industry}`);
+    
+    // Query the appropriate table based on industry
+    const tableName = industry === 'aesthetic' ? 'aesthetic_procedures' : 'dental_procedures';
+    console.log(`Using table: ${tableName}`);
+    
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*');
+    
+    if (error) {
+      console.error(`Error fetching data from ${tableName}:`, error);
+      throw error;
     }
     
-    // For now, return default/empty data for other parts to avoid 404s on missing views
-    // The user can address the missing views later if needed.
+    console.log(`Successfully retrieved ${data?.length || 0} records from ${tableName}`);
+    
+    // Return structured data with what we have
     return {
-      metrics: null, // Or some default metrics object
-      procedures: procedures || [],
-      categories: [], // Default empty array
-      marketTrends: [], // Default empty array
-      providers: [], // Default empty array
-      trendData: [] // Default empty array
+      metrics: {
+        total_articles: data?.length || 0,
+        article_growth_rate: 0,
+        total_procedures: data?.length || 0,
+        procedure_growth_rate: 0,
+        total_categories: 0,
+        total_providers: 0,
+        provider_growth_rate: 0
+      },
+      procedures: data || [],
+      categories: [],
+      marketTrends: [],
+      providers: [],
+      trendData: []
     };
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    // Ensure a default structure is returned even on critical failure
     return {
       metrics: null,
       procedures: [],

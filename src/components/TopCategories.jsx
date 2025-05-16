@@ -18,6 +18,10 @@ import CategoryNewsModal from './CategoryNewsModal';
 import ArticleIcon from '@mui/icons-material/Article';
 
 const TopCategories = ({ categories, title = "Top Categories" }) => {
+  console.log('[DEBUG] TopCategories received:', categories);
+  if (categories && categories.length > 0) {
+    console.log('[DEBUG] First category object:', categories[0]);
+  }
   const theme = useTheme();
   const { industry } = useContext(DataContext);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -67,7 +71,7 @@ const TopCategories = ({ categories, title = "Top Categories" }) => {
         
         <List disablePadding>
           {categories.map((category, index) => (
-            <React.Fragment key={category.id || index}>
+            <React.Fragment key={category.category_id || index}>
               <ListItem
                 component={motion.div}
                 initial={{ opacity: 0, x: -10 }}
@@ -87,7 +91,7 @@ const TopCategories = ({ categories, title = "Top Categories" }) => {
                         mb: 0.5
                       }}
                     >
-                      {category.name}
+                      {category.category_name}
                     </Typography>
                   }
                   secondary={

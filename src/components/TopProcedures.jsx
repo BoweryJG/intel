@@ -19,6 +19,10 @@ import ProcedureNewsModal from './ProcedureNewsModal';
 import ArticleIcon from '@mui/icons-material/Article';
 
 const TopProcedures = ({ procedures, title = "Top Procedures" }) => {
+  console.log('[DEBUG] TopProcedures received:', procedures);
+  if (procedures && procedures.length > 0) {
+    console.log('[DEBUG] First procedure object:', procedures[0]);
+  }
   const theme = useTheme();
   const { industry } = useContext(DataContext);
   const [selectedProcedure, setSelectedProcedure] = useState(null);
@@ -65,7 +69,7 @@ const TopProcedures = ({ procedures, title = "Top Procedures" }) => {
         
         <List disablePadding>
           {procedures.map((procedure, index) => (
-            <React.Fragment key={procedure.id || index}>
+            <React.Fragment key={procedure.procedure_id || index}>
               <ListItem
                 component={motion.div}
                 initial={{ opacity: 0, x: -10 }}
@@ -84,7 +88,7 @@ const TopProcedures = ({ procedures, title = "Top Procedures" }) => {
                         color: theme.palette.text.primary
                       }}
                     >
-                      {procedure.name}
+                      {procedure.procedure_name}
                     </Typography>
                   }
                   secondary={

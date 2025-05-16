@@ -138,6 +138,7 @@ const Dashboard = () => {
       {/* Procedures and Categories */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={6}>
+          {console.log('[DEBUG] Dashboard passes procedures:', procedures)}
           <TopProcedures 
             procedures={procedures} 
             title={`Top ${industryTitle} Procedures`}
