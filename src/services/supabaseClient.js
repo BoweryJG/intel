@@ -103,43 +103,78 @@ export const fetchNewsArticlesByCategory = async (industry, categoryId, limit = 
   }
 };
 
-// Fetch dashboard data using the correct tables that actually exist
-export const fetchDashboardData = async (industry) => {
+// Fetch dashboard data using the comprehensive views
+export const fetchDashboardData = async (industry = 'dental') => {
   try {
     console.log(`Fetching dashboard data for industry: ${industry}`);
     
-    // Query the appropriate table based on industry
-    const tableName = industry === 'aesthetic' ? 'aesthetic_procedures' : 'dental_procedures';
-    console.log(`Using table: ${tableName}`);
+    // Fetch all dashboard data in parallel
+    const [
+      { data: metricsData },
+      { data: proceduresData },
+      { data: categoriesData },
+      { data: marketTrendsData },
+      { data: providersData }
+    ] = await Promise.all([
+      supabase
+        .from('v_dashboard_industry_metrics')
+        .select('*')
+        .eq('industry', industry)
+        .single(),
+      
+      supabase
+        .from('v_dashboard_procedures')
+        .select('*')
+        .eq('industry', industry)
+        .order('article_mentions', { ascending: false })
+        .limit(10),
+      
+      supabase
+        .from('v_dashboard_categories')
+        .select('*')
+        .eq('industry', industry)
+        .order('article_count', { ascending: false }),
+      
+      supabase
+        .from('v_dashboard_market_trends')
+        .select('*')
+        .eq('industry', industry)
+        .order('impact_score', { ascending: false })
+        .limit(5),
+      
+      supabase
+        .from('v_dashboard_providers')
+        .select('*')
+        .eq('industry', industry)
+        .order('average_rating', { ascending: false })
+        .limit(5)
+    ]);
     
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*');
+    console.log('Dashboard data fetched successfully');
     
-    if (error) {
-      console.error(`Error fetching data from ${tableName}:`, error);
-      throw error;
-    }
-    
-    console.log(`Successfully retrieved ${data?.length || 0} records from ${tableName}`);
-    
-    // Return structured data with what we have
+    // Format the data for the frontend
     return {
-      metrics: {
-        total_articles: data?.length || 0,
-        article_growth_rate: 0,
-        total_procedures: data?.length || 0,
-        procedure_growth_rate: 0,
+      metrics: metricsData || {
+        industry,
+        total_articles: 0,
+        total_procedures: 0,
         total_categories: 0,
         total_providers: 0,
+        article_growth_rate: 0,
+        procedure_growth_rate: 0,
         provider_growth_rate: 0
       },
-      procedures: data || [],
-      categories: [],
-      marketTrends: [],
-      providers: [],
-      trendData: []
+      procedures: proceduresData || [],
+      categories: categoriesData || [],
+      marketTrends: marketTrendsData || [],
+      providers: providersData || [],
+      trendData: marketTrendsData?.map(trend => ({
+        name: trend.trend_name,
+        value: trend.impact_score,
+        growth: trend.expected_growth_rate
+      })) || []
     };
+    
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
     return {

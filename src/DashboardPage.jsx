@@ -1,198 +1,251 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
-import SupabaseTest from '../components/SupabaseTest';
-import SupabaseDataTest from './components/SupabaseDataTest';
+import { fetchDashboardData } from './services/supabaseClient';
 import {
-  Container, Grid, Card, CardContent, Typography, CircularProgress, Table, TableHead, TableRow, TableCell, TableBody
+  Container, Grid, Card, CardContent, Typography, CircularProgress, 
+  Table, TableHead, TableRow, TableCell, TableBody, ToggleButton, 
+  ToggleButtonGroup, Box, Chip
 } from '@mui/material';
-
-console.log('DashboardPage component is being rendered');
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [industry, setIndustry] = useState('aesthetic'); // Default to aesthetic industry
+  const [industry, setIndustry] = useState('aesthetic');
 
   useEffect(() => {
-    async function fetchData() {
+    async function loadDashboardData() {
       try {
         setLoading(true);
         setError(null);
-        console.log('Starting data fetch for industry:', industry);
-
-        // Test query first
-        const { data: test, error: testError } = await supabase
-          .from('news_articles')
-          .select('id, title, industry')
-          .limit(1);
-
-        if (testError) {
-          console.error('Test query failed:', testError);
-          throw testError;
-        }
-        console.log('Test query succeeded:', test);
-
-        // Fetch articles
-        const { data: articles, error: articlesError } = await supabase
-          .from('news_articles')
-          .select('*')
-          .eq('industry', industry);
-
-        if (articlesError) {
-          console.error('Articles query failed:', articlesError);
-          throw articlesError;
-        }
-        console.log('Articles fetched:', articles.length);
-
-        // Fetch procedures
-        const { data: procedures, error: proceduresError } = await supabase
-          .from('news_article_aesthetic_procedures')
-          .select('*')
-          .limit(5);
-
-        if (proceduresError) {
-          console.error('Procedures query failed:', proceduresError);
-          throw proceduresError;
-        }
-        console.log('Procedures fetched:', procedures.length);
-
-        // Fetch categories
-        const { data: categories, error: categoriesError } = await supabase
-          .from('news_articles_with_aesthetic_categories')
-          .select('*')
-          .limit(5);
-
-        if (categoriesError) {
-          console.error('Categories query failed:', categoriesError);
-          throw categoriesError;
-        }
-        console.log('Categories fetched:', categories.length);
-
-        // Log raw data for debugging
-        console.log('Raw articles:', articles);
-        console.log('Raw procedures:', procedures);
-        console.log('Raw categories:', categories);
-
-        // Transform the data to match our expected structure
-        const transformedData = {
-          metrics: {
-            total_articles: articles?.length || 0,
-            average_relevance: procedures?.reduce((sum, p) => sum + (p.relevance_score || 0), 0) / (procedures?.length || 1),
-            expected_growth: articles?.[0]?.expected_growth_rate || 0
-          },
-          procedures: procedures.map(p => ({
-            id: p.id,
-            article_id: p.article_id,
-            procedure_id: p.procedure_id
-          })) || [],
-          categories: categories.map(c => ({
-            id: c.id,
-            article_id: c.article_id,
-            category_id: c.category_id
-          })) || []
-        };
-
-        console.log('Transformed data:', transformedData);
-        setDashboardData(transformedData);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setError(error.message);
+        console.log(`Fetching dashboard data for ${industry} industry...`);
+        
+        const data = await fetchDashboardData(industry);
+        console.log('Dashboard data loaded:', data);
+        setDashboardData(data);
+      } catch (err) {
+        console.error('Error loading dashboard data:', err);
+        setError(err.message || 'Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchData();
+    loadDashboardData();
   }, [industry]);
 
-  console.log('Rendering DashboardPage with state:', { loading, error, dashboardData });
+  const handleIndustryChange = (event, newIndustry) => {
+    if (newIndustry !== null) {
+      setIndustry(newIndustry);
+    }
+  };
 
-  return (
-    <Container maxWidth="xl" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Dashboard
-      </Typography>
-      <SupabaseTest />
-      {loading ? (
-        <>
-          <Typography>Loading data...</Typography>
-          <CircularProgress />
-        </>
-      ) : error ? (
+  if (loading) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ mt: 2 }}>Loading dashboard data...</Typography>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
         <Typography color="error" variant="h6">
           Error: {error}
         </Typography>
-      ) : dashboardData ? (
-        <Grid container spacing={3}>
-          {/* Display metrics */}
-          {dashboardData.metrics && Object.entries(dashboardData.metrics).map(([key, value]) => (
-            <Grid item xs={12} sm={6} md={4} key={key}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6">{key.replace(/_/g, ' ')}</Typography>
-                  <Typography variant="h5">{String(value)}</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+      </Container>
+    );
+  }
 
-          {/* Display procedures */}
-          <Grid item xs={12}>
-            <Card>
+  if (!dashboardData) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
+        <Typography>No data available</Typography>
+      </Container>
+    );
+  }
+
+  const { metrics, procedures, categories, providers, trendData } = dashboardData;
+  const industryName = industry === 'aesthetic' ? 'Aesthetic' : 'Dental';
+
+  return (
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" component="h1">
+          {industryName} Dashboard
+        </Typography>
+        <ToggleButtonGroup
+          color="primary"
+          value={industry}
+          exclusive
+          onChange={handleIndustryChange}
+          aria-label="industry"
+        >
+          <ToggleButton value="aesthetic" aria-label="aesthetic">Aesthetic</ToggleButton>
+          <ToggleButton value="dental" aria-label="dental">Dental</ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
+      {/* Metrics Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {[
+          { key: 'total_articles', label: 'Total Articles', value: metrics?.total_articles || 0 },
+          { key: 'total_procedures', label: 'Procedures Tracked', value: metrics?.total_procedures || 0 },
+          { key: 'total_categories', label: 'Categories', value: metrics?.total_categories || 0 },
+          { key: 'total_providers', label: 'Providers', value: metrics?.total_providers || 0 },
+          { key: 'article_growth_rate', label: 'Article Growth', value: metrics?.article_growth_rate ? `${metrics.article_growth_rate.toFixed(1)}%` : 'N/A' },
+          { key: 'procedure_growth_rate', label: 'Procedure Growth', value: metrics?.procedure_growth_rate ? `${metrics.procedure_growth_rate.toFixed(1)}%` : 'N/A' },
+        ].map((metric) => (
+          <Grid item xs={12} sm={6} md={4} lg={2} key={metric.key}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent>
-                <Typography variant="h6">Top Procedures</Typography>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Procedure Name</TableCell>
-                      <TableCell>Value</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {dashboardData.procedures.map((procedure, idx) => (
-                      <TableRow key={idx}>
+                <Typography color="textSecondary" gutterBottom variant="overline">
+                  {metric.label}
+                </Typography>
+                <Typography variant="h5" component="div">
+                  {metric.value}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Grid container spacing={3}>
+        {/* Top Procedures */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Top Procedures</Typography>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Procedure</TableCell>
+                    <TableCell align="right">Mentions</TableCell>
+                    <TableCell align="right">Growth</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {procedures?.length > 0 ? (
+                    procedures.slice(0, 5).map((procedure) => (
+                      <TableRow key={procedure.id}>
                         <TableCell>{procedure.name}</TableCell>
-                        <TableCell>{procedure.value}</TableCell>
+                        <TableCell align="right">{procedure.article_mentions}</TableCell>
+                        <TableCell align="right">
+                          <Chip 
+                            label={`${procedure.avg_expected_growth?.toFixed(1) || 0}%`} 
+                            size="small" 
+                            color={procedure.avg_expected_growth >= 0 ? 'success' : 'error'} 
+                            variant="outlined"
+                          />
+                        </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Display categories */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Top Categories</Typography>
-                <Table size="small">
-                  <TableHead>
+                    ))
+                  ) : (
                     <TableRow>
-                      <TableCell>Category Name</TableCell>
-                      <TableCell>Value</TableCell>
+                      <TableCell colSpan={3} align="center">No procedure data available</TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {dashboardData.categories.map((category, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{category.name}</TableCell>
-                        <TableCell>{category.value}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </Grid>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </Grid>
-      ) : (
-        <Typography variant="h6">No data available</Typography>
-      )}
-      
-      {/* Add the test component at the bottom */}
-      <SupabaseDataTest />
+
+        {/* Market Trends */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Market Trends</Typography>
+              <div style={{ height: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={trendData || []}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" name="Impact Score" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Categories */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Categories</Typography>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Category</TableCell>
+                    <TableCell align="right">Article Count</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {categories?.length > 0 ? (
+                    categories.slice(0, 5).map((category) => (
+                      <TableRow key={category.id}>
+                        <TableCell>{category.name}</TableCell>
+                        <TableCell align="right">{category.article_count}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={2} align="center">No category data available</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Top Providers */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>Top Providers</Typography>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Provider</TableCell>
+                    <TableCell align="right">Rating</TableCell>
+                    <TableCell align="right">Mentions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {providers?.length > 0 ? (
+                    providers.slice(0, 5).map((provider) => (
+                      <TableRow key={provider.id}>
+                        <TableCell>{provider.name}</TableCell>
+                        <TableCell align="right">
+                          <Chip 
+                            label={provider.average_rating?.toFixed(1) || 'N/A'} 
+                            size="small" 
+                            color="primary"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell align="right">{provider.article_mentions}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center">No provider data available</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Container>
   );
 }
